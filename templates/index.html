@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}ZapLink - Premium URL Shortener &amp; Analytics{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <h1 class="hero-title">Shorten Your Links, <span class="text-gradient">Track the Impact</span></h1>
+    <p class="hero-subtitle">Create custom, glassmorphic short URLs and monitor real-time visitor analytics instantly.</p>
+</section>
+
+<!-- URL Shortener Card -->
+<div class="shortener-container glass-card animate-fade-in">
+    <form id="shorten-form" class="shortener-form">
+        <div class="input-wrapper">
+            <i data-lucide="link" class="input-icon"></i>
+            <input type="text" id="url-input" name="url" placeholder="Paste your long link here (e.g., https://example.com/very/long/path)" required autocomplete="off">
+        </div>
+        
+        <div class="advanced-options-trigger" id="options-trigger">
+            <i data-lucide="sliders" class="options-icon"></i>
+            <span>Advanced Options (Custom Alias)</span>
+            <i data-lucide="chevron-down" class="chevron-icon" id="options-chevron"></i>
+        </div>
+
+        <div class="advanced-options-content hidden" id="options-content">
+            <div class="input-wrapper custom-code-wrapper">
+                <span class="host-prefix">{{ request.host_url }}</span>
+                <input type="text" id="custom-code-input" name="custom_code" placeholder="custom-alias" autocomplete="off">
+            </div>
+            <p class="options-hint">Custom aliases must be 3-15 characters, containing only letters, numbers, and dashes.</p>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submit-btn">
+            <span>Shorten Link</span>
+            <i data-lucide="arrow-right" class="btn-icon"></i>
+        </button>
+    </form>
+
+    <!-- Error Alert (hidden by default) -->
+    <div id="error-alert" class="alert-card alert-error hidden">
+        <i data-lucide="alert-circle" class="alert-icon"></i>
+        <span id="error-message">An error occurred.</span>
+    </div>
+
+    <!-- Success Output Card (hidden by default) -->
+    <div id="success-card" class="success-card hidden animate-scale-in">
+        <div class="success-header">
+            <div class="success-badge">
+                <i data-lucide="check-circle" class="badge-icon"></i>
+                <span>URL Shortened Successfully!</span>
+            </div>
+        </div>
+        <div class="result-display">
+            <div class="result-url-container">
+                <span class="result-url" id="result-short-url">https://zaplink.co/abcdef</span>
+            </div>
+            <button class="btn-copy" id="copy-btn" data-clipboard="">
+                <i data-lucide="copy" class="copy-icon"></i>
+                <span>Copy</span>
+            </button>
+        </div>
+        <div class="result-details">
+            <div class="detail-item">
+                <span class="detail-label">Original Link</span>
+                <span class="detail-value truncate" id="result-original-url">https://example.com/very/long/path</span>
+            </div>
+            <div class="detail-actions">
+                <a href="#" id="result-analytics-link" class="btn-secondary">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>View Analytics</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Links Dashboard -->
+<div class="dashboard-container glass-card">
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <i data-lucide="history"></i>
+            <h2>Recently Shortened Links</h2>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="recent-links-table">
+            <thead>
+                <tr>
+                    <th>Original Destination</th>
+                    <th>Shortened Link</th>
+                    <th>Clicks</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if recent_urls %}
+                    {% for row in recent_urls %}
+                    <tr>
+                        <td class="original-url-cell">
+                            <span class="truncate" title="{{ row.original_url }}">{{ row.original_url }}</span>
+                        </td>
+                        <td class="short-url-cell">
+                            <a href="{{ request.host_url }}{{ row.short_code }}" target="_blank" class="short-link">
+                                {{ request.host_url }}{{ row.short_code }}
+                            </a>
+                        </td>
+                        <td class="clicks-cell">
+                            <span class="badge-clicks">
+                                <i data-lucide="eye" class="cell-icon"></i>
+                                {{ row.click_count }}
+                            </span>
+                        </td>
+                        <td class="date-cell">
+                            <!-- Show date only, format can be handled in templates -->
+                            <span>{{ row.created_at.split(' ')[0] }}</span>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <button class="btn-table-action btn-copy-table" data-copy-value="{{ request.host_url }}{{ row.short_code }}" title="Copy Short Link">
+                                    <i data-lucide="copy"></i>
+                                </button>
+                                <a href="{{ url_for('analytics', short_code=row.short_code) }}" class="btn-table-action btn-analytics-table" title="View Analytics">
+                                    <i data-lucide="bar-chart-2"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="empty-state-row">
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i data-lucide="link-2" class="empty-icon"></i>
+                                <p>No links shortened yet. Paste a long link above to get started!</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: url-shortener-configmap
+data:
+  DATABASE_PATH: database.db
+  SHORT_CODE_LENGTH: "6"

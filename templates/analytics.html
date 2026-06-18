@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}ZapLink Analytics - /{{ url.short_code }}{% endblock %}
+
+{% block content %}
+<!-- Back Navigation -->
+<div class="navigation-row">
+    <a href="{{ url_for('index') }}" class="btn-back">
+        <i data-lucide="arrow-left"></i>
+        <span>Back to Dashboard</span>
+    </a>
+</div>
+
+<!-- Link Details Overview -->
+<div class="analytics-overview glass-card">
+    <div class="overview-header">
+        <div class="badge-status active">
+            <span class="pulse-dot"></span>
+            <span>Tracking Active</span>
+        </div>
+        <h2 class="overview-title">Link Analytics</h2>
+        <p class="overview-subtitle">Created on {{ url.created_at.split(' ')[0] }} at {{ url.created_at.split(' ')[1][:5] if (url.created_at.split(' ') | length) > 1 else '' }}</p>
+    </div>
+    
+    <div class="link-info-grid">
+        <div class="info-card">
+            <span class="info-label">Shortened URL</span>
+            <div class="info-value-container">
+                <a href="{{ request.host_url }}{{ url.short_code }}" target="_blank" class="short-link-display">
+                    {{ request.host_url }}{{ url.short_code }}
+                </a>
+                <button class="btn-copy-mini" data-copy-value="{{ request.host_url }}{{ url.short_code }}" title="Copy Link">
+                    <i data-lucide="copy"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="info-card">
+            <span class="info-label">Original Destination</span>
+            <span class="original-link-display truncate" title="{{ url.original_url }}">{{ url.original_url }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Dashboard Grid -->
+<div class="stats-dashboard-grid">
+    <!-- Big Clicks Counter -->
+    <div class="stat-card glass-card clicks-counter-card">
+        <div class="stat-header">
+            <i data-lucide="mouse-pointer-click" class="stat-icon"></i>
+            <span class="stat-title">Total Engagements</span>
+        </div>
+        <div class="clicks-count">{{ total_clicks }}</div>
+        <p class="stat-desc">Total clicks redirected through this link since creation.</p>
+    </div>
+
+    <!-- Referrers Breakdown -->
+    <div class="stat-card glass-card">
+        <div class="stat-header">
+            <i data-lucide="share-2" class="stat-icon"></i>
+            <span class="stat-title">Top Traffic Sources</span>
+        </div>
+        <div class="breakdown-list">
+            {% if referrers %}
+                {% for item in referrers %}
+                    {% set pct = (item.count / total_clicks * 100) | round if total_clicks > 0 else 0 %}
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <span class="breakdown-name truncate">{{ item.referrer }}</span>
+                            <span class="breakdown-val">{{ item.count }} ({{ pct }}%)</span>
+                        </div>
+                        <div class="breakdown-bar">
+                            <div class="breakdown-fill" style="width: {{ pct }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data-state">No traffic source data available.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Platforms and Browsers Grid -->
+<div class="stats-dashboard-grid two-columns">
+    <!-- Platforms Breakdown -->
+    <div class="stat-card glass-card">
+        <div class="stat-header">
+            <i data-lucide="monitor" class="stat-icon"></i>
+            <span class="stat-title">Operating Systems</span>
+        </div>
+        <div class="breakdown-list">
+            {% if platforms %}
+                {% for item in platforms %}
+                    {% set pct = (item.count / total_clicks * 100) | round if total_clicks > 0 else 0 %}
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <span class="breakdown-name">
+                                {% if item.platform|lower == 'windows' %}
+                                    <i data-lucide="laptop" class="inline-icon"></i>
+                                {% elif item.platform|lower in ['iphone', 'android'] %}
+                                    <i data-lucide="smartphone" class="inline-icon"></i>
+                                {% else %}
+                                    <i data-lucide="help-circle" class="inline-icon"></i>
+                                {% endif %}
+                                {{ item.platform }}
+                            </span>
+                            <span class="breakdown-val">{{ item.count }} ({{ pct }}%)</span>
+                        </div>
+                        <div class="breakdown-bar">
+                            <div class="breakdown-fill platform-fill" style="width: {{ pct }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data-state">No platform data available.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Browsers Breakdown -->
+    <div class="stat-card glass-card">
+        <div class="stat-header">
+            <i data-lucide="chrome" class="stat-icon"></i>
+            <span class="stat-title">Web Browsers</span>
+        </div>
+        <div class="breakdown-list">
+            {% if browsers %}
+                {% for item in browsers %}
+                    {% set pct = (item.count / total_clicks * 100) | round if total_clicks > 0 else 0 %}
+                    <div class="breakdown-item">
+                        <div class="breakdown-info">
+                            <span class="breakdown-name">
+                                {{ item.browser }}
+                            </span>
+                            <span class="breakdown-val">{{ item.count }} ({{ pct }}%)</span>
+                        </div>
+                        <div class="breakdown-bar">
+                            <div class="breakdown-fill browser-fill" style="width: {{ pct }}%"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data-state">No browser data available.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Click Log -->
+<div class="dashboard-container glass-card">
+    <div class="dashboard-header">
+        <div class="dashboard-title">
+            <i data-lucide="list"></i>
+            <h2>Recent Clicks Log (Last 10)</h2>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="recent-links-table">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Referrer</th>
+                    <th>Browser</th>
+                    <th>Platform</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if history %}
+                    {% for click in history %}
+                    <tr>
+                        <td class="date-cell">{{ click.clicked_at }}</td>
+                        <td class="original-url-cell"><span class="truncate">{{ click.referrer }}</span></td>
+                        <td>{{ click.browser }}</td>
+                        <td>{{ click.platform }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr class="empty-state-row">
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i data-lucide="mouse-pointer-click" class="empty-icon"></i>
+                                <p>No click events recorded yet.</p>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
